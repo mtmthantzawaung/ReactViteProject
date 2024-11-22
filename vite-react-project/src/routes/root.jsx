@@ -4,30 +4,64 @@ import {
   useLoaderData,
   Form,
   redirect,
-  useNavigate,
+  useNavigation,
+  useSubmit,
 } from "react-router-dom";
 import "../index.css";
 import { getContacts, createContact } from "../contacts";
+import { useEffect, useRef, useState } from "react";
 
 export default function Root() {
-  const { contacts } = useLoaderData();
-  const navigation = useNavigate();
+  const { contacts, q } = useLoaderData();
+  const submit = useSubmit();
+  const navigation = useNavigation();
+  const searchRef = useRef();
+  const [isSearching, setIsSearching] = useState(false);
+
+  // Set the input value from the loader data
+  useEffect(() => {
+    searchRef.current.value = q;
+  }, [q]);
+
+  useEffect(() => {
+    if (navigation.state === "loading") {
+      setIsSearching(true);
+    } else {
+      const timeout = setTimeout(() => setIsSearching(false), 300); // Delay resetting spinner visibility
+      return () => clearTimeout(timeout);
+    }
+  }, [navigation.state]);
+
+  // const searching =
+  //   navigation.location &&
+  //   new URLSearchParams(navigation.location.search).has("q");
+
   return (
     <>
       <div id="sidebar">
         <h1>React Router Contacts</h1>
         <div>
-          <form id="search-form" role="search">
+          <Form id="search-form" role="search">
             <input
+              ref={searchRef}
               id="q"
+              className={isSearching ? "loading" : ""}
               aria-label="Search contacts"
               placeholder="Search"
               type="search"
               name="q"
+              defaultValue={q}
+              onChange={(e) => {
+                const isFirstSearch = q == null;
+                submit(e.currentTarget.form, {
+                  replace: !isFirstSearch,
+                });
+              }}
             />
-            <div id="search-spinner" aria-hidden hidden={true} />
+            <div id="search-spinner" aria-hidden hidden={!isSearching} />
             <div className="sr-only" aria-live="polite"></div>
-          </form>
+          </Form>
+          {/* New Contact Form */}
           <Form method="post">
             <button type="submit">New</button>
           </Form>
@@ -63,19 +97,18 @@ export default function Root() {
         </nav>
       </div>
       {/* all the other elements */}
-      <div
-        id="detail"
-        className={navigation.state === "loading" ? "loading" : ""}
-      >
+      <div id="detail" className={isSearching ? "loading" : ""}>
         <Outlet />
       </div>
     </>
   );
 }
 
-export async function loader() {
-  const contacts = await getContacts();
-  return { contacts };
+export async function loader({ request }) {
+  const url = new URL(request.url);
+  const q = url.searchParams.get("q") || "";
+  const contacts = await getContacts(q);
+  return { contacts, q };
 }
 
 export async function action() {
