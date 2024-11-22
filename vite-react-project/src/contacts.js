@@ -29,18 +29,14 @@ let data = [
 ];
 
 export async function getContacts(q = "") {
-  console.log("q", q);
-  console.log("q", typeof q);
   // Check if `q` is neither empty nor null
   if (q || q.trim() !== "") {
-    console.log("data ==", data);
     const filteredData = data.filter((contact) => {
       return (
         contact.first.toLowerCase().includes(q.toLowerCase()) || // Case-insensitive search
         contact.last.toLowerCase().includes(q.toLowerCase())
       );
     });
-    console.log("Filtered data:", filteredData);
     return filteredData;
   }
   return data;

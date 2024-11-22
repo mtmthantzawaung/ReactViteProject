@@ -8,7 +8,7 @@ import {
 } from "react-router-dom";
 import "./index.css";
 import "./App.css";
-import App from "./App.jsx";
+import Login from "./routes/login.jsx";
 import Root, {
   loader as rootLoader,
   action as rootAction,
@@ -22,6 +22,8 @@ import Contact, {
 import EditContact, { action as editAction } from "./routes/edit.jsx";
 import { action as destoryAction } from "./routes/destroy.jsx";
 import Index from "./routes/index";
+import { AuthProvider } from "./provider/authProvider.jsx";
+import ProtectedRoute from "./routes/protectedRoute.jsx";
 
 // const router = createBrowserRouter([
 //   {
@@ -64,35 +66,45 @@ import Index from "./routes/index";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
-    <Route
-      path="/"
-      element={<Root />}
-      loader={rootLoader}
-      action={rootAction}
-      errorElement={<ErrorPage />}
-    >
-      <Route errorElement={<ErrorPage />}>
-        <Route index element={<Index />} />
-        <Route
-          path="contacts/:contactId"
-          element={<Contact />}
-          loader={contactLoader}
-          action={contactAction}
-        />
-        <Route
-          path="contacts/:contactId/edit"
-          element={<EditContact />}
-          loader={contactLoader}
-          action={editAction}
-        />
-        <Route path="contacts/:contactId/destroy" action={destoryAction} />
+    <>
+      {/* Public Route */}
+      <Route path="login" element={<Login />} />
+
+      {/* Protected Routes */}
+      <Route
+        path="/"
+        element={<Root />}
+        loader={rootLoader}
+        action={rootAction}
+        errorElement={<ErrorPage />}
+      >
+        <Route element={<ProtectedRoute />}>
+          <Route errorElement={<ErrorPage />}>
+            <Route index element={<Index />} />
+            <Route
+              path="contacts/:contactId"
+              element={<Contact />}
+              loader={contactLoader}
+              action={contactAction}
+            />
+            <Route
+              path="contacts/:contactId/edit"
+              element={<EditContact />}
+              loader={contactLoader}
+              action={editAction}
+            />
+            <Route path="contacts/:contactId/destroy" action={destoryAction} />
+          </Route>
+        </Route>
       </Route>
-    </Route>
+    </>
   )
 );
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
   </StrictMode>
 );

@@ -1,10 +1,11 @@
 import * as React from "react";
 import Input from "@mui/material/Input";
 import { useForm } from "react-hook-form";
-import "./index.css";
 import { Password } from "@mui/icons-material";
+import { useAuth } from "../provider/authProvider";
+import { useNavigate } from "react-router-dom";
 
-export default function App() {
+export default function Login() {
   const {
     register,
     handleSubmit,
@@ -15,8 +16,14 @@ export default function App() {
       password: "",
     },
   });
-  const onSubmit = (data) => console.log(data);
-  console.log("pass is ", errors.password?.types);
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const onSubmit = (data) => {
+    console.log(data);
+    login(data);
+    navigate("/");
+  };
+
   return (
     <>
       <div className="flex justify-center items-center h-screen w-full bg-gray-900">

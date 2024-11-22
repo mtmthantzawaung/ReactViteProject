@@ -111,7 +111,7 @@ form[action$="destroy"] button {
 }
 @media only screen and (max-width: 768px) {
   #sidebar {
-    width: 10rem;
+    width: 16rem;
   }
 }
 
