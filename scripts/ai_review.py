@@ -374,7 +374,13 @@ def main():
         diff_text = fh.read()
 
     files = parse_diff(diff_text)
+    if not files:
+        print("No file entries recognized in the diff at all.")
+    # Diagnostics: what the parser saw and what filters kept, for easy debugging.
+    print("Files found in diff:",
+          [(fd.filename, fd.ext or "(no ext)", len(fd.added)) for fd in files])
     model_diff, reviewable = build_model_diff(files)
+    print("Reviewable after filter:", [fd.filename for fd in reviewable] or "NONE")
     if not model_diff.strip():
         print("No reviewable JS/CSS changes in this PR.")
         return 0
