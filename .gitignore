@@ -1,0 +1,6 @@
+# Python (review script)
+__pycache__/
+*.pyc
+
+# Workflow artifacts
+pr.diff

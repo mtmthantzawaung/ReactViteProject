@@ -1,0 +1,56 @@
+name: AI Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - "public/**"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: ai-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  ai-review:
+    runs-on: ubuntu-latest
+
+    steps:
+      # SECURITY: We intentionally check out the BASE commit, not the PR head.
+      # The workflow executes scripts/ai_review.py — checking out base code
+      # guarantees a PR author cannot tamper with that script to exfiltrate
+      # DEEPSEEK_API_KEY. The PR code enters the workflow only as DATA (pr.diff).
+      #
+      # actions/checkout is pinned to an exact commit SHA (v4.2.2) to prevent
+      # tag-moving attacks, per GitHub's security hardening guide.
+      - name: Checkout trusted base code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          fetch-depth: 1
+
+      - name: Get PR Diff
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          gh pr diff "$PR_NUMBER" \
+            --repo "$REPO" > pr.diff
+
+          echo "Diff size: $(wc -l < pr.diff) lines"
+
+      - name: AI Review
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+          FORK: ${{ github.event.pull_request.head.repo.fork }}
+        run: |
+          python3 scripts/ai_review.py pr.diff
