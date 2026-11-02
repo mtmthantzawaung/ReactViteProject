@@ -66,6 +66,16 @@ Review the provided unified diff. Focus on, in priority order:
 4. React anti-patterns (rules-of-hooks violations, missing effect dependencies, stale closures)
 5. Maintainability, but only when clearly significant
 
+- Avoid duplicate findings that describe the same root cause.
+- If a function contains a bug and another line only triggers that bug,
+  report the root cause at the function implementation.
+- Do not report downstream runtime errors separately when they are
+  direct consequences of an already reported issue.
+- Only create a separate finding when it represents an independent,
+  actionable problem.
+- Do not flag test invocation or console.log as a separate bug
+  when the actual defect is inside the called function.
+
 Rules:
 - Only comment on added or changed lines.
 - Ignore whitespace, formatting, and pure styling preferences.
