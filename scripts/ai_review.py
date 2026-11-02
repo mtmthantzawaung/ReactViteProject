@@ -66,6 +66,16 @@ Review the provided unified diff. Focus on, in priority order:
 4. React anti-patterns (rules-of-hooks violations, missing effect dependencies, stale closures)
 5. Maintainability, but only when clearly significant
 
+- Avoid duplicate findings that describe the same root cause.
+- If a function contains a bug and another line only triggers that bug,
+  report the root cause at the function implementation.
+- Do not report downstream runtime errors separately when they are
+  direct consequences of an already reported issue.
+- Only create a separate finding when it represents an independent,
+  actionable problem.
+- Do not flag test invocation or console.log as a separate bug
+  when the actual defect is inside the called function.
+
 Rules:
 - Only comment on added or changed lines.
 - Ignore whitespace, formatting, and pure styling preferences.
@@ -374,7 +384,13 @@ def main():
         diff_text = fh.read()
 
     files = parse_diff(diff_text)
+    if not files:
+        print("No file entries recognized in the diff at all.")
+    # Diagnostics: what the parser saw and what filters kept, for easy debugging.
+    print("Files found in diff:",
+          [(fd.filename, fd.ext or "(no ext)", len(fd.added)) for fd in files])
     model_diff, reviewable = build_model_diff(files)
+    print("Reviewable after filter:", [fd.filename for fd in reviewable] or "NONE")
     if not model_diff.strip():
         print("No reviewable JS/CSS changes in this PR.")
         return 0
